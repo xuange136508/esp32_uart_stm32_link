@@ -1,0 +1,46 @@
+{
+  "ai_list": [
+    {
+      "ai_id": "sr_7",
+      "name": "小金猴",
+      "ai_img": "http://qimg.cdnmama.com/aistory/2025/04/d0bc978833cf6447593d779611a3c7.gif",
+      "ai_say_img": "http://qimg.cdnmama.com/aistory/2025/04/f4dbfbdb75d73814fe208c615de000.gif",
+      "ai_hear_img": "http://qimg.cdnmama.com/aistory/2025/04/b3f6970a57becd83c77db280eb5a3a.gif"
+    },
+    {
+      "ai_id": "skr_21",
+      "name": "你说我画",
+      "ai_img": "http://qimg.cdnmama.com/aistory/2025/04/93768efda3149b55872be67a32dfe5.png",
+      "ai_say_img": "http://qimg.cdnmama.com/aistory/2025/04/7740e14fc1753efa6cc687d8c551e3.png",
+      "ai_hear_img": "http://qimg.cdnmama.com/aistory/2025/04/1c71bcb0d69bbd086131ff0b397272.png"
+    },
+    {
+      "ai_id": "skr_22",
+      "name": "儿歌故事",
+      "ai_img": "http://qimg.cdnmama.com/aistory/2025/05/8df00843b07a693dd277f0f55c2a8d.png",
+      "ai_say_img": "http://qimg.cdnmama.com/aistory/2025/05/cc1b12b27554178dbf160341d571f3.png",
+      "ai_hear_img": "http://qimg.cdnmama.com/aistory/2025/05/06c04710d3ca28bbf7d2b3cfcaa616.png"
+    },
+    {
+      "ai_id": "skr_4",
+      "name": "猜谜语",
+      "ai_img": "http://qimg.cdnmama.com/aistory/2025/04/ae4c037ef0cc97f1e16e3809310543.png",
+      "ai_say_img": "http://qimg.cdnmama.com/aistory/2025/04/c49d1d255e1b32a69771f185307f42.png",
+      "ai_hear_img": "http://qimg.cdnmama.com/aistory/2025/04/e31fb504f53152642c7ded75adb62b.png"
+    },
+    {
+      "ai_id": "skr_6",
+      "name": "唐诗三百首",
+      "ai_img": "http://qimg.cdnmama.com/aistory/2025/05/dea7263693f79d167dccbde34b4b88.png",
+      "ai_say_img": "http://qimg.cdnmama.com/aistory/2025/05/37ce3642910b3a791a5c1ba92fda98.png",
+      "ai_hear_img": "http://qimg.cdnmama.com/aistory/2025/05/083c5250a5cbaac27b4ff7fd6ee246.png"
+    },
+    {
+      "ai_id": "skr_7",
+      "name": "十万个为什么",
+      "ai_img": "http://qimg.cdnmama.com/aistory/2025/05/e8612720cd35cf3bcd7a02c11acfff.png",
+      "ai_say_img": "http://qimg.cdnmama.com/aistory/2025/05/7920cf831f3fc2f2c765f0c609c9ba.png",
+      "ai_hear_img": "http://qimg.cdnmama.com/aistory/2025/05/50bebe3f589c281327b68781292527.png"
+    }
+  ]
+}

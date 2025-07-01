@@ -1,0 +1,46 @@
+{
+  "ai_list": [
+    {
+      "ai_id": "sr_7",
+      "name": "小金猴",
+      "ai_img": "1.gif",
+      "ai_say_img": "2.gif",
+      "ai_hear_img": "3.gif"
+    },
+    {
+      "ai_id": "skr_21",
+      "name": "你说我画",
+      "ai_img": "16.png",
+      "ai_say_img": "17.png",
+      "ai_hear_img": "18.png"
+    },
+    {
+      "ai_id": "skr_22",
+      "name": "儿歌故事",
+      "ai_img": "13.png",
+      "ai_say_img": "14.png",
+      "ai_hear_img": "15.png"
+    },
+    {
+      "ai_id": "skr_4",
+      "name": "猜谜语",
+      "ai_img": "4.png",
+      "ai_say_img": "5.png",
+      "ai_hear_img": "6.png"
+    },
+    {
+      "ai_id": "skr_6",
+      "name": "唐诗三百首",
+      "ai_img": "7.png",
+      "ai_say_img": "8.png",
+      "ai_hear_img": "9.png"
+    },
+    {
+      "ai_id": "skr_7",
+      "name": "十万个为什么",
+      "ai_img": "10.png",
+      "ai_say_img": "11.png",
+      "ai_hear_img": "12.png"
+    }
+  ]
+}
