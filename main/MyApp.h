@@ -65,6 +65,11 @@ private:
     // STM32数据处理回调
     void OnSTM32SensorData(const STM32SensorData& sensor_data);
     void OnSTM32JsonData(const std::string& json_data);
+    
+    // STM32播放控制处理
+    void HandlePlayControlCommand(const cJSON* json);
+    void PlayPrenatalEducation();
+    void PlayWhiteNoise();
 
     EventGroupHandle_t event_group_ = nullptr;
 

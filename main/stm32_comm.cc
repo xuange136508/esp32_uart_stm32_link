@@ -171,8 +171,6 @@ void STM32Comm::StopReceiveTask() {
 void STM32Comm::UartReceiveTask() {
     char data[STM32_UART_BUF_SIZE];
     uart_event_t event;
-    int break_count = 0;
-    
     ESP_LOGI(TAG, "UART接收任务启动 - 开始监听STM32数据...");
     
     while (true) {
@@ -226,15 +224,7 @@ void STM32Comm::UartReceiveTask() {
                     
                 case UART_BREAK:
                 case UART_DATA_BREAK:
-                    break_count++;
-                    if (break_count % 100 == 1) {  // 每100次break只打印一次
-                        ESP_LOGW(TAG, "UART接收到break信号 (计数: %d) - 请检查硬件连接!", break_count);
-                        ESP_LOGW(TAG, "硬件检查提示:");
-                        ESP_LOGW(TAG, "1. 确认STM32 UART3 TX -> ESP32 GPIO18");
-                        ESP_LOGW(TAG, "2. 确认STM32 UART3 RX -> ESP32 GPIO17");
-                        ESP_LOGW(TAG, "3. 确认两设备共地(GND相连)");
-                        ESP_LOGW(TAG, "4. 确认STM32端波特率为115200");
-                    }
+                    ESP_LOGW(TAG, "UART接收到break信号 - 请检查硬件连接!");
                     break;
                     
                 case UART_PARITY_ERR:
@@ -254,7 +244,6 @@ void STM32Comm::UartReceiveTask() {
                     break;
                     
                 case UART_EVENT_MAX:
-                    // 这是枚举的最大值，通常不会收到这个事件
                     ESP_LOGW(TAG, "UART事件最大值");
                     break;
                     
@@ -310,6 +299,33 @@ void STM32Comm::ProcessSTM32Data(const std::string& json_data) {
             }
             if (rgb_led && cJSON_IsBool(rgb_led)) {
                 ESP_LOGI(TAG, "RGB灯当前状态: %s", cJSON_IsTrue(rgb_led) ? "开启" : "关闭");
+            }
+        }
+        
+    } else if (device_name == "STM32_PlayControl") {
+        // 处理播放控制命令
+        ESP_LOGI(TAG, "接收到播放控制命令");
+        cJSON *playback = cJSON_GetObjectItem(json, "playback");
+        if (playback) {
+            cJSON *status = cJSON_GetObjectItem(playback, "status");
+            cJSON *content_type = cJSON_GetObjectItem(playback, "content_type");
+            
+            if (status && cJSON_IsString(status) && content_type && cJSON_IsString(content_type)) {
+                ESP_LOGI(TAG, "播放状态: %s, 内容类型: %s", status->valuestring, content_type->valuestring);
+            }
+        }
+        
+        // 处理控制状态
+        cJSON *controls = cJSON_GetObjectItem(json, "controls");
+        if (controls) {
+            cJSON *breathing_led = cJSON_GetObjectItem(controls, "breathing_led");
+            cJSON *rgb_led = cJSON_GetObjectItem(controls, "rgb_led");
+            
+            if (breathing_led && cJSON_IsBool(breathing_led)) {
+                ESP_LOGI(TAG, "播放时呼吸灯状态: %s", cJSON_IsTrue(breathing_led) ? "开启" : "关闭");
+            }
+            if (rgb_led && cJSON_IsBool(rgb_led)) {
+                ESP_LOGI(TAG, "播放时RGB灯状态: %s", cJSON_IsTrue(rgb_led) ? "开启" : "关闭");
             }
         }
     }

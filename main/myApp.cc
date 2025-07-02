@@ -69,6 +69,29 @@ void MyApp::OnSTM32SensorData(const STM32SensorData& sensor_data) {
 // STM32 JSON数据处理回调
 void MyApp::OnSTM32JsonData(const std::string& json_data) {
     ESP_LOGI(APP_TAG, "接收到STM32 JSON数据: %s", json_data.c_str());
+    
+    // 解析JSON数据
+    cJSON *json = cJSON_Parse(json_data.c_str());
+    if (json == NULL) {
+        ESP_LOGE(APP_TAG, "STM32 JSON解析失败");
+        return;
+    }
+    
+    cJSON *device = cJSON_GetObjectItem(json, "device");
+    if (device == NULL || !cJSON_IsString(device)) {
+        ESP_LOGE(APP_TAG, "STM32 JSON格式错误：缺少device字段");
+        cJSON_Delete(json);
+        return;
+    }
+    
+    std::string device_name = device->valuestring;
+    
+    // 处理播放控制命令
+    if (device_name == "STM32_PlayControl") {
+        HandlePlayControlCommand(json);
+    }
+    
+    cJSON_Delete(json);
 }
 
 void MyApp::startLoop() {
@@ -82,9 +105,9 @@ void MyApp::startLoop() {
 
     // 设置STM32数据接收回调
     stm32_comm_.SetDataReceivedCallback([this](const STM32SensorData& data) {
-        addTask([this, data]() {
-            OnSTM32SensorData(data);
-        });
+        // addTask([this, data]() {
+        //     OnSTM32SensorData(data);
+        // });
     });
 
     stm32_comm_.SetJsonReceivedCallback([this](const std::string& json_data) {
@@ -191,20 +214,20 @@ void MyApp::startLoop() {
     }, "audio_loop", 4096 * 2, this, 8, &audio_loop_task_handle_, 1);
 
     // 创建STM32通信测试任务（定时发送控制命令）
-    xTaskCreatePinnedToCore([](void* arg) {
-        MyApp* app = static_cast<MyApp*>(arg);
-        vTaskDelay(pdMS_TO_TICKS(3000)); // 延迟3秒后开始
+    // xTaskCreatePinnedToCore([](void* arg) {
+    //     MyApp* app = static_cast<MyApp*>(arg);
+    //     vTaskDelay(pdMS_TO_TICKS(3000)); // 延迟3秒后开始
         
-        while (true) {
-            // 每10秒发送一次控制命令示例
-            app->GetSTM32Comm().SendControlCommand(true, false);  // 开启呼吸灯，关闭RGB灯
-            vTaskDelay(pdMS_TO_TICKS(10000));
+    //     while (true) {
+    //         // 每10秒发送一次控制命令示例
+    //         app->GetSTM32Comm().SendControlCommand(true, false);  // 开启呼吸灯，关闭RGB灯
+    //         vTaskDelay(pdMS_TO_TICKS(10000));
             
-            app->GetSTM32Comm().SendControlCommand(false, true);  // 关闭呼吸灯，开启RGB灯
-            vTaskDelay(pdMS_TO_TICKS(10000));
-        }
-        vTaskDelete(NULL);
-    }, "stm32_test", 4096, this, 3, &stm32_test_task_handle_, 0);
+    //         app->GetSTM32Comm().SendControlCommand(false, true);  // 关闭呼吸灯，开启RGB灯
+    //         vTaskDelay(pdMS_TO_TICKS(10000));
+    //     }
+    //     vTaskDelete(NULL);
+    // }, "stm32_test", 4096, this, 3, &stm32_test_task_handle_, 0);
 
     // json解析任务
     addTask([this]() {
@@ -263,6 +286,9 @@ void MyApp::startLoop() {
     codec->EnableInput(false);
     // codec->EnableOutput(false);
 
+
+    // 移除了硬编码的测试音频播放代码
+    // 现在播放将通过STM32的JSON命令控制
 }
 
 
@@ -553,4 +579,105 @@ void MyApp::StopListening() {
 
 std::vector<std::shared_ptr<AiRole>> MyApp::getAgentList(){
     return agentRoles;
+}
+
+// 处理STM32播放控制命令
+void MyApp::HandlePlayControlCommand(const cJSON* json) {
+    cJSON *playback = cJSON_GetObjectItem(json, "playback");
+    if (playback == NULL) {
+        ESP_LOGE(APP_TAG, "播放控制命令格式错误：缺少playback字段");
+        return;
+    }
+    
+    cJSON *status = cJSON_GetObjectItem(playback, "status");
+    cJSON *content_type = cJSON_GetObjectItem(playback, "content_type");
+    cJSON *command_source = cJSON_GetObjectItem(playback, "command_source");
+    
+    if (status == NULL || !cJSON_IsString(status) ||
+        content_type == NULL || !cJSON_IsString(content_type)) {
+        ESP_LOGE(APP_TAG, "播放控制命令格式错误：缺少必要字段");
+        return;
+    }
+    
+    std::string status_str = status->valuestring;
+    std::string content_type_str = content_type->valuestring;
+    std::string source_str = command_source ? command_source->valuestring : "unknown";
+    
+    ESP_LOGI(APP_TAG, "播放控制命令 - 状态: %s, 内容类型: %s, 来源: %s", 
+             status_str.c_str(), content_type_str.c_str(), source_str.c_str());
+    
+    // 处理控制状态（呼吸灯和RGB灯）
+    cJSON *controls = cJSON_GetObjectItem(json, "controls");
+    if (controls) {
+        cJSON *breathing_led = cJSON_GetObjectItem(controls, "breathing_led");
+        cJSON *rgb_led = cJSON_GetObjectItem(controls, "rgb_led");
+        
+        if (breathing_led && cJSON_IsBool(breathing_led) && 
+            rgb_led && cJSON_IsBool(rgb_led)) {
+            // 发送控制命令到STM32
+            stm32_comm_.SendControlCommand(cJSON_IsTrue(breathing_led), cJSON_IsTrue(rgb_led));
+        }
+    }
+    
+    // 根据播放状态和内容类型执行相应操作
+    if (status_str == "play") {
+        if (content_type_str == "prenatal_education") {
+            PlayPrenatalEducation();
+        } else if (content_type_str == "white_noise") {
+            PlayWhiteNoise();
+        } else {
+            ESP_LOGW(APP_TAG, "未知的内容类型: %s", content_type_str.c_str());
+        }
+    } else if (status_str == "stop") {
+        ESP_LOGI(APP_TAG, "停止播放命令");
+        // 可以添加停止播放的逻辑
+    }
+}
+
+// 播放胎教音乐
+void MyApp::PlayPrenatalEducation() {
+    ESP_LOGI(APP_TAG, "开始播放胎教音乐");
+    
+    std::string message = R"({
+        "type": 8,
+        "sub_type": 1,
+        "device": "google_baba",
+        "command_source": "background",
+        "data": {
+            "id": 1,
+            "url": "/data/wwwroot/guardian_machine/static/00a075860b874a7c80c9d71ab42f8982.pcm",
+            "file_name": "天黑黑"
+        }
+    })";
+    
+    if (protocol_) {
+        protocol_->SendPcmAudio(message);
+        ESP_LOGI(APP_TAG, "胎教音乐播放命令已发送");
+    } else {
+        ESP_LOGE(APP_TAG, "协议对象未初始化，无法播放胎教音乐");
+    }
+}
+
+// 播放白噪音
+void MyApp::PlayWhiteNoise() {
+    ESP_LOGI(APP_TAG, "开始播放白噪音");
+    
+    std::string message = R"({
+        "type": 8,
+        "sub_type": 1,
+        "device": "google_baba",
+        "command_source": "background",
+        "data": {
+            "id": 2,
+            "url": "/data/wwwroot/guardian_machine/static/00b57fd80cbb4f3c91217f087b85894b.pcm",
+            "file_name": "地黑黑"
+        }
+    })";
+    
+    if (protocol_) {
+        protocol_->SendPcmAudio(message);
+        ESP_LOGI(APP_TAG, "白噪音播放命令已发送");
+    } else {
+        ESP_LOGE(APP_TAG, "协议对象未初始化，无法播放白噪音");
+    }
 }

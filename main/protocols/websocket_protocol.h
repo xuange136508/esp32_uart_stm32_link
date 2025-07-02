@@ -10,7 +10,9 @@
 #define WEBSOCKET_PROTOCOL_SERVER_HELLO_EVENT (1 << 0)
 
 #define OPUS_FRAME_DURATION_MS 60
-#define CONFIG_WEBSOCKET_URL "ws://toy-socket.mama.cn:80"
+// #define CONFIG_WEBSOCKET_URL "ws://toy-socket.mama.cn:80"
+// #define CONFIG_WEBSOCKET_URL "ws://guardian-machine-socket.mama.cn:80"
+ #define CONFIG_WEBSOCKET_URL "ws://172.16.0.82:8092"
 #define CONFIG_WEBSOCKET_ACCESS_TOKEN "txkOlEHu2br4jM3neH7kLdFoEuurg6zR"
 #define CONFIG_WEBSOCKET_DEVICE "google_baba"
 
