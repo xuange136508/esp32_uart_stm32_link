@@ -70,6 +70,7 @@ private:
     void HandlePlayControlCommand(const cJSON* json);
     void PlayPrenatalEducation();
     void PlayWhiteNoise();
+    void StopPlaying();
 
     EventGroupHandle_t event_group_ = nullptr;
 

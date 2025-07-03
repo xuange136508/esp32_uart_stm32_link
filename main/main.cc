@@ -41,8 +41,10 @@ extern "C" void app_main(void)
 
 
     printf("开始配置网络！\n");
-    const char* ssid = "mama"; 
-    const char* password = "Gzscmama.cn";
+    const char* ssid = "toy"; 
+    const char* password = "66668888";
+    //  const char* ssid = "mama"; 
+    // const char* password = "Gzscmama.cn";
     WiFiManager wifiManager(ssid, password); 
     wifiManager.init();  // 连接wifi
 

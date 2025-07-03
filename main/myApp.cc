@@ -142,6 +142,26 @@ void MyApp::startLoop() {
         // 接受到如果是json数据，进行解析
         auto type = cJSON_GetObjectItem(root, "type");
         auto device = cJSON_GetObjectItem(root, "device"); //"google_baba"
+
+
+        //加入设备控制的解析
+        if (type->valueint == 5) {
+            auto sub_type = cJSON_GetObjectItem(root, "sub_type");
+            auto data = cJSON_GetObjectItem(root, "data"); 
+            if (sub_type->valueint == 9){
+                auto action = cJSON_GetObjectItem(data, "action");
+                if (strcmp(action->valuestring, "open") == 0) {
+                    stm32_comm_.SendControlCommand(true, true);
+                } else{
+                    stm32_comm_.SendControlCommand(false, false);  
+                }
+            }
+            else if (sub_type->valueint == 12){
+                auto brightness = cJSON_GetObjectItem(data, "brightness");
+            }
+        }
+
+
         
         if (type->valueint == 3) { // 比较字符串函数
             auto sub_type = cJSON_GetObjectItem(root, "sub_type");// 1、2、3
@@ -216,15 +236,14 @@ void MyApp::startLoop() {
     // 创建STM32通信测试任务（定时发送控制命令）
     // xTaskCreatePinnedToCore([](void* arg) {
     //     MyApp* app = static_cast<MyApp*>(arg);
-    //     vTaskDelay(pdMS_TO_TICKS(3000)); // 延迟3秒后开始
-        
+    //     vTaskDelay(pdMS_TO_TICKS(2000)); // 延迟3秒后开始
     //     while (true) {
     //         // 每10秒发送一次控制命令示例
     //         app->GetSTM32Comm().SendControlCommand(true, false);  // 开启呼吸灯，关闭RGB灯
-    //         vTaskDelay(pdMS_TO_TICKS(10000));
+    //         vTaskDelay(pdMS_TO_TICKS(5000));
             
     //         app->GetSTM32Comm().SendControlCommand(false, true);  // 关闭呼吸灯，开启RGB灯
-    //         vTaskDelay(pdMS_TO_TICKS(10000));
+    //         vTaskDelay(pdMS_TO_TICKS(5000));
     //     }
     //     vTaskDelete(NULL);
     // }, "stm32_test", 4096, this, 3, &stm32_test_task_handle_, 0);
@@ -628,10 +647,13 @@ void MyApp::HandlePlayControlCommand(const cJSON* json) {
         } else {
             ESP_LOGW(APP_TAG, "未知的内容类型: %s", content_type_str.c_str());
         }
-    } else if (status_str == "stop") {
-        ESP_LOGI(APP_TAG, "停止播放命令");
-        // 可以添加停止播放的逻辑
-    }
+         } else if (status_str == "stop") {
+         ESP_LOGI(APP_TAG, "停止播放命令");
+         StopPlaying();
+     } else if (status_str == "pause") {
+         ESP_LOGI(APP_TAG, "暂停播放命令");
+         StopPlaying();
+     }
 }
 
 // 播放胎教音乐
@@ -679,5 +701,26 @@ void MyApp::PlayWhiteNoise() {
         ESP_LOGI(APP_TAG, "白噪音播放命令已发送");
     } else {
         ESP_LOGE(APP_TAG, "协议对象未初始化，无法播放白噪音");
+    }
+}
+
+// 停止播放
+void MyApp::StopPlaying() {
+    ESP_LOGI(APP_TAG, "开始停止播放");
+    
+    std::string message = R"({
+        "type": 3,
+        "sub_type": 6,
+        "device": "google_baba",
+        "data": {
+            "action": "stop"
+        }
+    })";
+    
+    if (protocol_) {
+        protocol_->SendPcmAudio(message);
+        ESP_LOGI(APP_TAG, "停止播放命令已发送");
+    } else {
+        ESP_LOGE(APP_TAG, "协议对象未初始化，无法发送停止播放命令");
     }
 }

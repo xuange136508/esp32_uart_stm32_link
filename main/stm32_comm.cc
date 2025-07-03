@@ -101,10 +101,10 @@ bool STM32Comm::SendJsonToSTM32(const std::string& json_data) {
 
     std::lock_guard<std::mutex> lock(uart_mutex_);
     
-    std::string data_with_ending = json_data + "\r\n";
-    int len = uart_write_bytes(STM32_UART_NUM, data_with_ending.c_str(), data_with_ending.length());
+    int len = uart_write_bytes(STM32_UART_NUM, json_data.c_str(), json_data.length());
     if (len > 0) {
         ESP_LOGI(TAG, "发送JSON到STM32成功: %s", json_data.c_str());
+        // ESP_LOGI(TAG, "长度：%d", len);
         return true;
     } else {
         ESP_LOGE(TAG, "发送JSON到STM32失败");

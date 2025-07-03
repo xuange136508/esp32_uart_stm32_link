@@ -171,7 +171,7 @@ void WebsocketProtocol::initParams() {
             }
         } else {
             // 直接打印返回
-            //ESP_LOGE(TAG, "websocket json 接收 ==>: %s", data);
+            // ESP_LOGE(TAG, "websocket json 接收 ==>: %s", data);
 
             auto root = cJSON_Parse(data);
             auto type = cJSON_GetObjectItem(root, "type");
