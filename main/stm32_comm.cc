@@ -101,7 +101,8 @@ bool STM32Comm::SendJsonToSTM32(const std::string& json_data) {
 
     std::lock_guard<std::mutex> lock(uart_mutex_);
     
-    int len = uart_write_bytes(STM32_UART_NUM, json_data.c_str(), json_data.length());
+    std::string data_with_ending = json_data + "\a";
+    int len = uart_write_bytes(STM32_UART_NUM, data_with_ending.c_str(), data_with_ending.length());
     if (len > 0) {
         ESP_LOGI(TAG, "发送JSON到STM32成功: %s", json_data.c_str());
         // ESP_LOGI(TAG, "长度：%d", len);
@@ -112,17 +113,19 @@ bool STM32Comm::SendJsonToSTM32(const std::string& json_data) {
     }
 }
 
-void STM32Comm::SendControlCommand(bool breathing_led, bool rgb_led) {
+void STM32Comm::SendControlCommand(bool breathing_led, bool rgb_led, int led_brightness) {
     cJSON *json = cJSON_CreateObject();
     cJSON *device = cJSON_CreateString("ESP32");
     cJSON *command = cJSON_CreateString("control");
     cJSON *breathing = cJSON_CreateString(breathing_led ? "on" : "off");
     cJSON *rgb = cJSON_CreateString(rgb_led ? "on" : "off");
+    cJSON *brightness = cJSON_CreateNumber(led_brightness);
     
     cJSON_AddItemToObject(json, "device", device);
     cJSON_AddItemToObject(json, "command", command);
     cJSON_AddItemToObject(json, "breathing_led", breathing);
     cJSON_AddItemToObject(json, "rgb_led", rgb);
+    cJSON_AddItemToObject(json, "led_brightness", brightness);
     
     char *json_string = cJSON_Print(json);
     if (json_string) {

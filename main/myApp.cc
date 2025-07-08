@@ -151,13 +151,20 @@ void MyApp::startLoop() {
             if (sub_type->valueint == 9){
                 auto action = cJSON_GetObjectItem(data, "action");
                 if (strcmp(action->valuestring, "open") == 0) {
-                    stm32_comm_.SendControlCommand(true, true);
+                    stm32_comm_.SendControlCommand(true, true, -1);
                 } else{
-                    stm32_comm_.SendControlCommand(false, false);  
+                    stm32_comm_.SendControlCommand(false, false, -1);  
                 }
             }
             else if (sub_type->valueint == 12){
                 auto brightness = cJSON_GetObjectItem(data, "brightness");
+                if (brightness && cJSON_IsNumber(brightness)) {
+                    int brightness_value = brightness->valueint;
+                    ESP_LOGI(APP_TAG, "设置LED亮度：%d", brightness_value);
+                    stm32_comm_.SendControlCommand(true, true, brightness_value);
+                } else {
+                    ESP_LOGE(APP_TAG, "亮度值格式错误");
+                }
             }
         }
 
@@ -638,7 +645,7 @@ void MyApp::HandlePlayControlCommand(const cJSON* json) {
         }
     }
     
-    // 根据播放状态和内容类型执行相应操作
+        // 根据播放状态和内容类型执行相应操作
     if (status_str == "play") {
         if (content_type_str == "prenatal_education") {
             PlayPrenatalEducation();
@@ -647,13 +654,16 @@ void MyApp::HandlePlayControlCommand(const cJSON* json) {
         } else {
             ESP_LOGW(APP_TAG, "未知的内容类型: %s", content_type_str.c_str());
         }
-         } else if (status_str == "stop") {
-         ESP_LOGI(APP_TAG, "停止播放命令");
-         StopPlaying();
-     } else if (status_str == "pause") {
-         ESP_LOGI(APP_TAG, "暂停播放命令");
-         StopPlaying();
-     }
+    } else if (status_str == "stop") {
+        ESP_LOGI(APP_TAG, "停止播放命令");
+        StopPlaying();
+    } else if (status_str == "pause") {
+        ESP_LOGI(APP_TAG, "暂停播放命令");
+        StopPlaying();
+    } else if (content_type_str == "volume_control") {
+        // 处理音量控制命令
+        HandleVolumeControl(status_str);
+    }
 }
 
 // 播放胎教音乐
@@ -722,5 +732,53 @@ void MyApp::StopPlaying() {
         ESP_LOGI(APP_TAG, "停止播放命令已发送");
     } else {
         ESP_LOGE(APP_TAG, "协议对象未初始化，无法发送停止播放命令");
+    }
+}
+
+// 处理音量控制命令
+void MyApp::HandleVolumeControl(const std::string& status) {
+    Settings boardSettings("board", true);
+    
+    if (status == "mute") {
+        ESP_LOGI(APP_TAG, "执行静音命令");
+        // 保存当前音量到临时设置中
+        int current_volume = boardSettings.GetInt("volume", 30);
+        boardSettings.SetInt("volume_backup", current_volume);
+        // 设置音量为0
+        boardSettings.SetInt("volume", 0);
+        
+    } else if (status == "unmute") {
+        ESP_LOGI(APP_TAG, "执行取消静音命令");
+        // 恢复之前保存的音量
+        int backup_volume = boardSettings.GetInt("volume_backup", 30);
+        boardSettings.SetInt("volume", backup_volume);
+        
+    } else if (status == "vol_up") {
+        ESP_LOGI(APP_TAG, "执行声音调大命令");
+        int current_volume = boardSettings.GetInt("volume", 30);
+        current_volume += 20;
+        if (current_volume >= 100) {
+            current_volume = 100; // 限制最大音量为100
+        }
+        boardSettings.SetInt("volume", current_volume);
+        ESP_LOGI(APP_TAG, "音量调整为: %d", current_volume);
+        
+    } else if (status == "vol_down") {
+        ESP_LOGI(APP_TAG, "执行声音调小命令");
+        int current_volume = boardSettings.GetInt("volume", 30);
+        current_volume -= 20;
+        if (current_volume <= 10) {
+            current_volume = 10; // 限制最小音量为10
+        }
+        boardSettings.SetInt("volume", current_volume);
+        ESP_LOGI(APP_TAG, "音量调整为: %d", current_volume);
+        
+    } else if (status == "vol_max") {
+        ESP_LOGI(APP_TAG, "执行声音调到最大命令");
+        boardSettings.SetInt("volume", 100);
+        ESP_LOGI(APP_TAG, "音量调整为最大: 100");
+        
+    } else {
+        ESP_LOGW(APP_TAG, "未知的音量控制命令: %s", status.c_str());
     }
 }

@@ -53,7 +53,7 @@ public:
     bool Init();
     void Deinit();
     bool SendJsonToSTM32(const std::string& json_data);
-    void SendControlCommand(bool breathing_led, bool rgb_led);
+    void SendControlCommand(bool breathing_led, bool rgb_led, int led_brightness = 50);
 
     // 回调设置
     void SetDataReceivedCallback(DataReceivedCallback callback);

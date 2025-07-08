@@ -71,6 +71,7 @@ private:
     void PlayPrenatalEducation();
     void PlayWhiteNoise();
     void StopPlaying();
+    void HandleVolumeControl(const std::string& status);
 
     EventGroupHandle_t event_group_ = nullptr;
 
